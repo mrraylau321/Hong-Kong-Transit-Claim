@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REC 工程行程</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">R</span>
+    <div>
+      <h1>REC 工程行程</h1>
+      <p>HK Schedule &amp; Transport</p>
+    </div>
+  </div>
+  <div class="nav">
+    <button id="btn-prev" class="btn">‹</button>
+    <button id="btn-today" class="btn">今日</button>
+    <button id="btn-next" class="btn">›</button>
+    <input type="month" id="month-picker">
+  </div>
+  <div class="stats">
+    <span class="pill">本月：<strong id="month-hours">0 小時</strong></span>
+    <span class="pill">車費：<strong id="month-fare">HK$ 0.00</strong></span>
+  </div>
+  <div class="actions">
+    <button id="btn-testdata" class="btn">一鍵生成測試數據</button>
+    <button id="btn-xl-schedule" class="btn primary">⬇️ 行程表 Excel</button>
+    <button id="btn-xl-fare" class="btn primary">⬇️ 車費表 Excel</button>
+    <button id="btn-clear" class="btn danger-outline">清除本月</button>
+  </div>
+</header>
+
+<main>
+  <div class="cal-head">
+    <label>所屬分組 <input type="text" id="group-name" value="第一組"></label>
+    <span class="hint">撳任何一日開行程詳情；資料只存喺你部機嘅瀏覽器（localStorage）。港鐵票價用 MTR Open Data 成人八達通票價自動計算。</span>
+  </div>
+  <div class="calendar">
+    <div class="cal-grid cal-weekdays">
+      <div>一 (MON)</div><div>二 (TUE)</div><div>三 (WED)</div><div>四 (THU)</div>
+      <div>五 (FRI)</div><div class="we">六 (SAT)</div><div class="we">日 (SUN)</div>
+    </div>
+    <div class="cal-grid" id="cal-body"></div>
+  </div>
+</main>
+
+<div id="backdrop" class="hidden"></div>
+<aside id="drawer" class="hidden" aria-hidden="true">
+  <div class="drawer-head">
+    <div>
+      <h2 id="drawer-title"></h2>
+      <p id="drawer-sub"></p>
+    </div>
+    <button id="drawer-close" class="btn">✕</button>
+  </div>
+  <div class="drawer-summary">
+    <span>當日：<strong id="drawer-hours"></strong></span>
+    <span>八達通成人車費：<strong id="drawer-fare"></strong></span>
+    <button id="btn-copy-day" class="btn">複製行程</button>
+  </div>
+  <div class="drawer-body">
+    <section class="card">
+      <h3>🟢 Row 0 全日起步點 (Start Point)</h3>
+      <label>起始地點
+        <input type="text" id="start-point" list="start-points" placeholder="例如：葵涌公司">
+        <datalist id="start-points">
+          <option value="葵涌公司"><option value="九龍灣公司">
+          <option value="沙田公司"><option value="觀塘公司"><option value="荃灣公司">
+        </datalist>
+      </label>
+      <span class="hint">起步點車費 $0，之後每個行程嘅港鐵票價由你揀起點站／終點站自動計算。</span>
+    </section>
+    <div id="rows"></div>
+    <button id="btn-add-row" class="btn">＋ 新增行程</button>
+  </div>
+  <div class="drawer-foot">
+    <span>全日合計八達通成人車費 <strong id="drawer-fare-foot"></strong></span>
+    <button id="drawer-done" class="btn primary">完成關閉</button>
+  </div>
+</aside>
+
+<script src="fares-data.js"></script>
+<script src="xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
