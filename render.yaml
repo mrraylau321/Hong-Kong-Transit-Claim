@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: transport-claim
+    env: static
+    buildCommand: "echo 'static site, nothing to build'"
+    staticPublishPath: .

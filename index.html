@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交通費申報表</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div>
+      <h1>🚇 交通費申報表</h1>
+      <p class="subtitle">每月車費 claim · 港鐵成人八達通票價自動計算 · 巴士手動輸入金額</p>
+    </div>
+    <div class="top-actions">
+      <button id="btn-print" class="btn primary">🖨️ 列印 / 存為 PDF</button>
+      <button id="btn-csv" class="btn">⬇️ 匯出 CSV</button>
+      <button id="btn-clear" class="btn danger-outline">清除本月</button>
+    </div>
+  </header>
+
+  <section class="controls card">
+    <label>月份 <input type="month" id="month-picker"></label>
+    <label>申報人 <input type="text" id="claimant" placeholder="姓名（會印喺申報表上）"></label>
+    <span class="hint">資料只存喺你部機嘅瀏覽器（localStorage），唔會上傳去任何伺服器。</span>
+  </section>
+
+  <section class="card quickfill">
+    <h2>常用行程（設定一次，套用到成個月）</h2>
+    <div id="qf-legs"></div>
+    <div class="qf-actions">
+      <button id="btn-qf-add" class="btn">＋ 加一程</button>
+      <button id="btn-apply-all" class="btn">套用到全部日子</button>
+      <button id="btn-apply-weekday" class="btn">只套用到工作日（Mon–Fri）</button>
+      <span class="hint">套用會覆蓋該日子嘅行程。想保留個別日子，套用完再逐日改。</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="totals">
+      <div><span>本月合計</span><strong id="total-month">HK$ 0.00</strong></div>
+      <div><span>港鐵小計</span><strong id="total-mtr">HK$ 0.00</strong></div>
+      <div><span>巴士小計</span><strong id="total-bus">HK$ 0.00</strong></div>
+      <div><span>有申報日數</span><strong id="total-days">0 日</strong></div>
+    </div>
+    <div class="table-wrap">
+      <table id="grid">
+        <thead>
+          <tr>
+            <th style="width:64px">日期</th><th style="width:48px">星期</th>
+            <th>行程（第一程、第二程……可逐日加程）</th>
+            <th style="width:110px">當日合計</th><th style="width:150px"></th>
+          </tr>
+        </thead>
+        <tbody id="grid-body"></tbody>
+      </table>
+    </div>
+    <p class="footnote">
+      港鐵票價來源：港鐵 Open Data 站到站成人八達通票價（2026-10-26 下載），僅供參考，申報前請自行核對。
+      機場快綫、輕鐵不在此表內，如需申報請用「巴士」欄手動輸入金額。
+      巴士票價請按實際車費填寫。
+    </p>
+  </section>
+</div>
+
+<!-- Print-only claim form -->
+<div id="print-area" aria-hidden="true"></div>
+
+<script src="fares-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

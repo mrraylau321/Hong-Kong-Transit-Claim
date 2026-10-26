@@ -1,0 +1,57 @@
+:root { --ink:#1a1a1a; --muted:#666; --line:#ddd; --accent:#0a6ebd; --weekend:#f7f3ea; }
+* { box-sizing:border-box; }
+body { font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif; color:var(--ink); margin:0; background:#f2f4f7; }
+#app { max-width:1280px; margin:0 auto; padding:20px; }
+.topbar { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+.topbar h1 { margin:0; font-size:26px; }
+.subtitle { color:var(--muted); margin:4px 0 0; }
+.card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
+.controls { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+.controls input[type=month], .controls input[type=text] { padding:6px 10px; font-size:15px; border:1px solid var(--line); border-radius:6px; }
+.hint { color:var(--muted); font-size:13px; }
+.btn { padding:8px 14px; font-size:14px; border:1px solid var(--line); border-radius:8px; background:#fff; cursor:pointer; }
+.btn:hover { background:#f0f0f0; }
+.btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+.btn.primary:hover { background:#085a9c; }
+.btn.danger-outline { color:#b00; border-color:#e0aaaa; }
+.quickfill h2 { margin:0 0 12px; font-size:16px; }
+.qf-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+.qf-row select, .qf-row input { padding:6px 8px; font-size:14px; border:1px solid var(--line); border-radius:6px; }
+.qf-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+.totals { display:flex; gap:28px; flex-wrap:wrap; margin-bottom:14px; }
+.totals div span { color:var(--muted); font-size:13px; display:block; }
+.totals strong { font-size:22px; }
+.table-wrap { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; font-size:14px; }
+th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; white-space:nowrap; }
+thead th { background:#eef3f8; }
+tr.weekend td { background:var(--weekend); }
+td.day-total, td.fare { font-variant-numeric:tabular-nums; text-align:right; }
+td select, td input { padding:4px 6px; font-size:13px; border:1px solid var(--line); border-radius:5px; max-width:150px; }
+td input[type=number] { width:84px; }
+.legs-cell { min-width:420px; }
+.leg { display:flex; gap:8px; align-items:center; padding:5px 0; border-bottom:1px dashed #eee; flex-wrap:wrap; }
+.leg:last-child { border-bottom:none; }
+.leg-name { font-size:12px; color:var(--muted); min-width:52px; }
+.leg-fare { font-variant-numeric:tabular-nums; color:#333; }
+.btn-mini { padding:2px 8px; font-size:12px; border:1px solid var(--line); border-radius:5px; background:#fff; cursor:pointer; }
+.footnote { color:var(--muted); font-size:12.5px; line-height:1.6; }
+#print-area { display:none; }
+
+/* ---- Print: clean claim form only, autofit to page ---- */
+@page { size: A4 landscape; margin: 14mm; }
+@media print {
+  body { background:#fff; }
+  #app { display:none !important; }
+  #print-area { display:block !important; color:#000; font-size:12px; }
+  #print-area h1 { font-size:20px; margin:0 0 4px; }
+  #print-area .p-meta { margin-bottom:10px; }
+  #print-area table { border-collapse:collapse; width:100%; table-layout:auto; }
+  #print-area th, #print-area td { border:1px solid #000; padding:4px 6px; text-align:left; word-break:break-word; }
+  #print-area td.num { text-align:right; white-space:nowrap; }
+  #print-area .p-totals { margin-top:10px; font-size:14px; }
+  #print-area .p-totals div { margin:3px 0; }
+  #print-area .p-sign { margin-top:30px; display:flex; gap:60px; }
+  #print-area .p-sign span { border-top:1px solid #000; padding-top:4px; min-width:180px; display:inline-block; }
+  #print-area .p-foot { margin-top:14px; font-size:11px; color:#444; }
+}
