@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "node --test schedule-app/tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.3"
+  }
+}

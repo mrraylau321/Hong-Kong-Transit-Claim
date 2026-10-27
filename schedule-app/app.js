@@ -1,11 +1,17 @@
 (function () {
   const DATA = window.MTR_FARES;
+  const V = window.RECValidation;
+  const add = (a, b) => {
+    if (a == null || b == null) return null;
+    const units = Math.round(a * 100) + Math.round(b * 100);
+    return Number.isSafeInteger(units) ? units / 100 : null;
+  };
   if (!DATA) { document.body.innerHTML = '<p style="padding:20px">載入車費資料失敗，請確認 fares-data.js 同 index.html 喺同一個資料夾。</p>'; return; }
   const label = s => `${s.zh} (${s.en})`;
   const idOf = new Map(DATA.stations.map(s => [label(s), s.id]));
   const zhOf = new Map(DATA.stations.map(s => [s.zh, s.id]));
   function parseStation(text) {
-    if (!text) return null;
+    if (typeof text !== 'string' || !text) return null;
     const t = text.trim();
     if (idOf.has(t)) return idOf.get(t);
     if (zhOf.has(t)) return zhOf.get(t);
@@ -15,8 +21,8 @@
     const f = DATA.fares[`${parseStation(from)}-${parseStation(to)}`];
     return f == null ? null : f;
   }
-  const fmt = n => 'HK$ ' + (n || 0).toFixed(2);
-  const fmtH = h => (Math.round(h * 10) / 10).toFixed(1) + 'h';
+  const fmt = n => n == null ? '待修正' : 'HK$ ' + n.toFixed(2);
+  const fmtH = h => h == null ? '待修正' : h.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2, useGrouping: false }) + 'h';
   const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
   const MODES = { mtr: '港鐵八達通成人', walk: '步行 ($0)', company: '公司車 ($0)', custom: '自訂車費 ($)' };
 
@@ -62,25 +68,10 @@
     if (!md.days[d]) md.days[d] = { startPoint: '葵涌公司', rows: [] };
     return md.days[d];
   }
-  function rowFare(row) {
-    if (row.mode === 'mtr') { const f = fareFor(row.from, row.to); return f == null ? 0 : f; }
-    if (row.mode === 'custom') { const n = parseFloat(row.customFare); return isNaN(n) ? 0 : n; }
-    return 0;
-  }
-  function rowHours(row) {
-    const a = parseFloat(row.am) || 0, p = parseFloat(row.pm) || 0;
-    return a + p;
-  }
+  function rowFare(row) { return V.fare(row, fareFor, parseStation).value; }
+  function rowHours(row) { return V.hours(row).value; }
   function dayTotals(d) {
-    const day = monthData().days[d];
-    if (!day) return { hours: 0, fare: 0, custom: 0 };
-    let h = 0, f = 0, c = 0;
-    day.rows.forEach(r => {
-      h += rowHours(r);
-      if (r.mode === 'mtr') f += rowFare(r);
-      if (r.mode === 'custom') c += rowFare(r);
-    });
-    return { hours: h, fare: f, custom: c };
+    return V.totals(monthData().days[d]?.rows || [], fareFor, parseStation);
   }
 
   // ---------- calendar ----------
@@ -114,10 +105,10 @@
     let totH = 0, totF = 0, totC = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       const t = dayTotals(d);
-      totH += t.hours; totF += t.fare; totC += t.custom;
+      totH = add(totH, t.hours); totF = add(totF, t.fare); totC = add(totC, t.custom);
     }
     document.getElementById('month-hours').textContent = fmtH(totH).replace('h', ' 小時');
-    document.getElementById('month-fare').textContent = fmt(totF + totC);
+    document.getElementById('month-fare').textContent = fmt(add(totF, totC));
 
     for (let i = 0; i < firstOffset; i++) {
       const e = document.createElement('div'); e.className = 'day empty'; body.appendChild(e);
@@ -134,7 +125,7 @@
       const num = document.createElement('span'); num.className = 'd-num' + ((wd === 0 || wd === 6) ? ' we' : '');
       num.textContent = d;
       top.appendChild(num);
-      if (t.hours > 0) {
+      if (t.hours == null || t.hours > 0) {
         const b = document.createElement('span'); b.className = 'hours-badge'; b.textContent = fmtH(t.hours);
         top.appendChild(b);
       }
@@ -185,8 +176,8 @@
     i.addEventListener('change', () => { onChange(i.value); save(); renderDrawer(); });
     return i;
   }
-  function numInput(value, onChange) {
-    const i = document.createElement('input'); i.type = 'number'; i.min = '0'; i.step = '0.5'; i.value = value;
+  function numInput(value, onChange, isFare = false) {
+    const i = document.createElement('input'); i.type = 'number'; i.min = '0'; i.step = '0.01'; i.max = isFare ? String(Number.MAX_SAFE_INTEGER / 100) : '24'; i.value = value;
     i.addEventListener('change', () => { onChange(i.value); save(); renderDrawer(); });
     return i;
   }
@@ -254,12 +245,12 @@
         const gSt = document.createElement('div'); gSt.className = 'grid2';
         gSt.append(field('起點站', sF), field('終點站', sT));
         card.append(gMode, gSt);
-        const f = fareFor(row.from, row.to);
+        const result = V.fare(row, fareFor, parseStation);
         const fl = document.createElement('div'); fl.className = 'fare-line';
-        fl.innerHTML = `預算車費：<strong>${f == null ? (row.from && row.to ? '查無組合' : '—') : fmt(f)}</strong>`;
+        fl.textContent = `預算車費：${result.message || fmt(result.value)}`;
         card.appendChild(fl);
       } else if (row.mode === 'custom') {
-        gMode.append(field('自訂車費 (HK$)', numInput(row.customFare, v => row.customFare = v)));
+        gMode.append(field('自訂車費 (HK$)', numInput(row.customFare, v => row.customFare = v, true)));
         card.appendChild(gMode);
       } else {
         card.appendChild(gMode);
@@ -277,6 +268,12 @@
         day.rows.splice(i + 1, 0, JSON.parse(JSON.stringify(row))); save(); renderDrawer();
       });
       card.appendChild(cp);
+      const issues = t.errors.filter(e => e.index === i || (e.index == null && i === 0));
+      if (issues.length) {
+        const warning = document.createElement('p'); warning.className = 'validation-error';
+        warning.setAttribute('role', 'alert'); warning.textContent = issues.map(e => e.message).join('；');
+        card.appendChild(warning);
+      }
       rowsBox.appendChild(card);
     });
   }
@@ -352,11 +349,31 @@
     }
     return out;
   }
+  function validatedMonthRows() {
+    // Commit the currently edited field before taking either export snapshot.
+    if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+    const rows = monthRows();
+    const errors = [];
+    const days = [...new Set(rows.map(row => row.d))];
+    let totalFare = 0;
+    days.forEach(d => {
+      const totals = dayTotals(d);
+      totals.errors.forEach(e => errors.push(`${monthPicker.value}-${String(d).padStart(2, '0')} ${e.index == null ? '全日' : `行程 ${e.index + 1}`}：${e.message}`));
+      if (totals.fare != null && totals.custom != null) totalFare += Math.round(totals.fare * 100) + Math.round(totals.custom * 100);
+    });
+    if (!Number.isSafeInteger(totalFare)) errors.push('本月車費超出可精確計算範圍');
+    if (errors.length) {
+      alert('未能匯出 Excel，請先修正以下資料：\n\n' + errors.join('\n'));
+      return null;
+    }
+    return rows;
+  }
   function saveXlsx(wb, filename) { XLSX.writeFile(wb, filename); }
 
   document.getElementById('btn-xl-schedule').addEventListener('click', () => {
     const [y, m] = monthPicker.value.split('-').map(Number);
-    const rows = monthRows();
+    const rows = validatedMonthRows();
+    if (!rows) return;
     const aoa = [
       [`${y}年${m}月 工程行程表`, `所屬分組：${store.group || ''}`],
       [],
@@ -364,9 +381,9 @@
     ];
     let totH = 0;
     rows.forEach(({ d, wd, i, r }) => {
-      const h = rowHours(r); totH += h;
+      const h = rowHours(r); totH = add(totH, h);
       aoa.push([`${m}/${d}`, wd, `Row ${i}`, r.district, r.contract, r.venue,
-        parseFloat(r.am) || 0, parseFloat(r.pm) || 0, h, r.companions, r.remarks]);
+        V.hours(r).am, V.hours(r).pm, h, r.companions, r.remarks]);
     });
     aoa.push([]);
     aoa.push(['本月合計時數', '', '', '', '', '', '', '', totH, '', '']);
@@ -379,7 +396,8 @@
 
   document.getElementById('btn-xl-fare').addEventListener('click', () => {
     const [y, m] = monthPicker.value.split('-').map(Number);
-    const rows = monthRows();
+    const rows = validatedMonthRows();
+    if (!rows) return;
     const aoa = [
       [`${y}年${m}月 車費表`, `所屬分組：${store.group || ''}`],
       [],
@@ -388,8 +406,8 @@
     let totM = 0, totC = 0;
     rows.forEach(({ d, wd, i, r }) => {
       const f = rowFare(r);
-      if (r.mode === 'mtr') totM += f;
-      if (r.mode === 'custom') totC += f;
+      if (r.mode === 'mtr') totM = add(totM, f);
+      if (r.mode === 'custom') totC = add(totC, f);
       aoa.push([`${m}/${d}`, wd, `Row ${i}`,
         r.mode === 'mtr' ? r.from : '', r.mode === 'mtr' ? r.to : '',
         MODES[r.mode], f]);
@@ -397,7 +415,7 @@
     aoa.push([]);
     aoa.push(['八達通成人小計', '', '', '', '', '', totM]);
     aoa.push(['自訂車費小計', '', '', '', '', '', totC]);
-    aoa.push(['本月合計車費', '', '', '', '', '', totM + totC]);
+    aoa.push(['本月合計車費', '', '', '', '', '', add(totM, totC)]);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     ws['!cols'] = [{ wch: 8 }, { wch: 6 }, { wch: 8 }, { wch: 22 }, { wch: 22 }, { wch: 18 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
